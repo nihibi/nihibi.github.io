@@ -1,24 +1,16 @@
 ---
-import { published } from "@blog/utils";
-import Preview from "@blog/ui/Preview/Preview.astro";
-import Pagination from "@blog/components/Pagination.astro";
-import { pageSize, siteInfo } from "@blog/config";
-import BlogPage from "@blog/Layouts/BlogPage.astro";
+import HomePagination from "@components/HomePagination.astro";
+import Base from "@layouts/Base.astro";
+import Posts from "@layouts/Posts.astro";
 
-const allPosts = await published();
+import { getCollection } from "astro:content";
 
-const totalPage = Math.max(1, Math.ceil(allPosts.length / pageSize));
+const posts = (await getCollection("blog")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
 ---
 
-<BlogPage hero={siteInfo.hero} heroPosition={siteInfo.heroPosition}>
-    <main>
-        {
-            allPosts
-                .slice(0, pageSize)
-                .map((p, i) => (
-                    <Preview post={p} direction={i % 2 === 0 ? "left" : ""} />
-                ))
-        }
-        <Pagination currentPage="1" totalPage={totalPage} url="pages" />
-    </main>
-</BlogPage>
+<Base>
+  <Posts posts={posts} />
+  <HomePagination />
+</Base>

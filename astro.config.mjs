@@ -1,103 +1,47 @@
-import { defineConfig } from "astro/config";
-import mdx from "@astrojs/mdx";
-import tailwind from "@astrojs/tailwind";
-import vue from "@astrojs/vue";
-import { astroImageTools } from "astro-imagetools";
-import robotsTxt from "astro-robots-txt";
-// import compress from "astro-compress";
-import path from "path";
-// import partytown from "@astrojs/partytown";
-import remarkSmartypants from "remark-smartypants";
-import rehypeSlug from "rehype-slug";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import remarkMath from "remark-math";
-import rehypeMathjax from "rehype-mathjax";
+import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
+import tailwind from '@astrojs/tailwind';
+import Compress from "astro-compress";
+import sitemap from '@astrojs/sitemap';
+import robotsTxt from 'astro-robots-txt';
+import { VitePWA } from "vite-plugin-pwa"
 
-import sitemap from "@astrojs/sitemap";
-import remarkParseVar from "./plugins/remark-parseVar.mjs";
-import remarkCode from "./plugins/remark-code.mjs";
-import remarkFlow from "./plugins/remark-flow.mjs";
+import { manifest } from "./src/utils/manifest"
 
+// https://astro.build/config
 export default defineConfig({
+	site: 'https://gndx.dev',
+	image: {
+		remotePatterns: [{ protocol: "https" }],
+	},
 	markdown: {
-		gfm: true,
-		syntaxHighlight: "prism",
-		remarkPlugins: [
-			remarkMath,
-			remarkSmartypants,
-			remarkParseVar,
-			remarkFlow,
-			remarkCode,
-		],
-		rehypePlugins: [
-			rehypeMathjax,
-			rehypeSlug,
-			[
-				rehypeAutolinkHeadings,
-				{
-					behavior: "wrap",
-				},
-			],
-		],
+		drafts: true,
 		shikiConfig: {
-			theme: "poimandres",
-			langs: [],
-			wrap: false,
+			theme: 'material-theme-palenight',
+			wrap: true
+		}
+	},
+	integrations: [mdx({
+		syntaxHighlight: 'shiki',
+		shikiConfig: {
+			theme: 'material-theme-palenight',
+			wrap: true
 		},
-	},
-	site: "https://nihib.github.io/",
-	integrations: [
-		tailwind({
-			config: { path: "./tailwind.config.js" },
-			applyBaseStyles: false,
-		}),
-		// partytown(),
-		// compress({
-		//     html: false
-		// }),
-		robotsTxt(),
-		astroImageTools,
-		vue(),
-		mdx({
-			remarkPlugins: [
-				remarkMath,
-				remarkSmartypants,
-				remarkParseVar,
-				remarkFlow,
-				remarkCode,
-			],
-			rehypePlugins: [
-				rehypeMathjax,
-				rehypeSlug,
-				[
-					rehypeAutolinkHeadings,
-					{
-						behavior: "wrap",
-					},
-				],
-			],
-			gfm: true,
-			syntaxHighlight: "prism",
-		}),
-		sitemap(),
-	],
-	server: {
-		port: 3322,
-	},
+		drafts: true
+	}), Compress(), sitemap(), tailwind(), robotsTxt()],
 	vite: {
-		ssr: {
-			external: ["svgo"],
-		},
-		optimizeDeps: {
-			exclude: ["mermaid"],
-		},
-		resolve: {
-			alias: {
-				"@root": path.resolve("./"),
-				"@blog": path.resolve("./src"),
-				"#": path.resolve("./typings"),
-			},
-		},
-		plugins: [],
-	},
+		plugins: [
+			VitePWA({
+				registerType: "autoUpdate",
+				manifest,
+				workbox: {
+					globDirectory: 'dist',
+					globPatterns: [
+						'**/*.{js,css,svg,png,jpg,jpeg,gif,webp,woff,woff2,ttf,eot,ico}',
+					],
+					navigateFallback: null,
+				},
+			})
+		]
+	}
 });
